@@ -19,13 +19,13 @@ def main():
         print('Allow the launch as an administrator!')
         return ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
 
-    git_repo_root = Path.cwd()
-    if git_repo_root.parts[-1] == 'contrib':
-        git_repo_root = git_repo_root.parent
+ # Use the script's location to determine the repository root
+    script_path = Path(__file__).resolve()
+    git_repo_root = script_path.parent if script_path.parent.name == 'contrib' else script_path.parent.parent
 
     select = tkFileDialog.askopenfilename(
         title='Select the executable file from the GTA:SA installation directory',
-        filetypes=[("GTA:SA", ".exe")], initialdir=os.environ['GTA_SA_DIR'] if 'GTA_SA_DIR' in os.environ else ''
+        filetypes=[("GTA:SA", ".exe")], initialdir=os.environ.get('GTA_SA_DIR', '')
     )
     if not select:
         return input('You have not selected a file, we are leaving. Press Enter...')
@@ -33,9 +33,14 @@ def main():
     gta_sa_file = Path(select)
     gta_root_dir = gta_sa_file.parent.resolve()
 
-    # Unpack zip into gta dir
+    # Ensure plugins.zip exists
+    plugins_zip_path = git_repo_root / 'plugins.zip'
+    if not plugins_zip_path.exists():
+        raise FileNotFoundError(f"File not found: {plugins_zip_path}")
+
+    # Unpack zip into GTA:SA root directory
     print("Unpacking `plugins.zip` into GTA:SA root directory...")
-    with zipfile.ZipFile(git_repo_root / 'contrib' / 'plugins.zip') as plugins_zip:
+    with zipfile.ZipFile(plugins_zip_path) as plugins_zip:
         plugins_zip.extractall(gta_root_dir)
 
     # Create symlinks
@@ -53,6 +58,7 @@ def main():
     set_env_var('GTA_SA_EXE', gta_sa_file)
     set_env_var('GTA_SA_DIR', gta_root_dir)
     input('Done! Press Enter...')
+    os.system('pause')
 
 if __name__ == "__main__":
     main()
