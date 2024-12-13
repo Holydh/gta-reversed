@@ -4,10 +4,13 @@
 
 #include "StdInc.h"
 #include "config.h"
+#include "VRmodule.h"
 
 #include "extensions/CommandLine.h"
 #include "extensions/Configuration.hpp"
 #include "reversiblehooks/RootHookCategory.h"
+
+VRmodule vrModule;
 
 void InjectHooksMain(HMODULE hThisDLL);
 
@@ -110,6 +113,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 
         InjectHooksMain(hModule);
         ApplyCommandLineHookSettings();
+        vrModule.VRmoduleLoop();
         break;
     }
     case DLL_THREAD_ATTACH:
@@ -119,5 +123,6 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
     case DLL_PROCESS_DETACH:
         break;
     }
+
     return TRUE;
 }
